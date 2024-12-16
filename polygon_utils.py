@@ -7,6 +7,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.storage.memory import MemoryStorage
 import aiohttp
+from datetime import datetime
 
 from config import TOKEN, POLYGON_API_KEY  # Импортируем необходимые переменные
 
@@ -55,7 +56,12 @@ async def process_company_name(message: types.Message, state: FSMContext):
         if isinstance(data, list):
             response_message = f"Данные по {company_name}:\n"
             for entry in data:
-                response_message += f"Дата: {entry['t']}, Открытие: {entry['o']}, Закрытие: {entry['c']}, Объем: {entry['v']}\n"
+                # Преобразование даты
+                formatted_date = datetime.utcfromtimestamp(entry['t'] / 1000).strftime('%Y%m%d')
+                response_message += (
+                    f"Дата: {formatted_date}, Открытие: {entry['o']}, "
+                    f"Закрытие: {entry['c']}, Объем: {entry['v']}\n"
+                )
             await message.reply(response_message)
         else:
             await message.reply(data)  # Если возникла ошибка или нет данных
@@ -65,16 +71,10 @@ async def process_company_name(message: types.Message, state: FSMContext):
     # Заканчиваем состояние
     await state.clear()
 
-
-
 async def main() -> None:
-
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-
     await dp.start_polling(bot)
 
-
 if __name__ == '__main__':
-        import asyncio
-
-        asyncio.run(main())
+    import asyncio
+    asyncio.run(main())
